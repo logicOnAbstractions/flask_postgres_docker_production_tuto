@@ -11,12 +11,12 @@ services:
     env_file:
       - ./.env.dev
   db:
-    image: postgres:13.1
+    image: postgres:12-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
-      - POSTGRES_USER=myuser
-      - POSTGRES_PASSWORD=mypass
-      - POSTGRES_DB=db_dev
+      - POSTGRES_USER=hello_flask
+      - POSTGRES_PASSWORD=hello_flask
+      - POSTGRES_DB=hello_flask_dev
 volumes:
   postgres_data:
