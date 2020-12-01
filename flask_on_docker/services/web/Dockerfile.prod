@@ -1,0 +1,46 @@
+# using a 2-stage build here
+
+############ BUILDER
+FROM python:3.8.1-slim-buster as builder
+
+WORKDIR /usr/src/app
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+RUN pip install --upgrade pip
+# no need for the explicit target path because we've already set WORKDIR as /usr/src/app above
+COPY . .
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r requirements.txt
+########## TODO: pretty sure we could some cache-prevention or cleanup ###########
+
+
+########### FINALE
+
+FROM python:3.8.1-slim-buster
+
+# create dir, app user to sandbox stuff
+#RUN mkdir -p
+# create the app user
+RUN useradd -ms /home/app app
+#RUN adduser -S app -G app
+
+ENV HOME=/home/app
+ENV APP_HOME=/home/app/web
+RUN mkdir $APP_HOME
+WORKDIR $APP_HOME
+
+COPY --from=builder /usr/src/app/wheels /wheels
+COPY --from=builder /usr/src/app/requirements.txt .
+RUN pip install --upgrade pip
+RUN pip install --no-cache /wheels/*
+
+COPY ./entrypoint.prod.sh $APP_HOME
+COPY . $APP_HOME
+
+RUN chown -R app:app $APP_HOME
+USER app
+
+# seems this should use $APP_HOME, in case we override it or something?
+ENTRYPOINT ["/home/app/web/entrypoint.prod.sh"]
+
