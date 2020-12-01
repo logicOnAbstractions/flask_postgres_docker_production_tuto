@@ -18,7 +18,7 @@ class User(db.Model):
 
 
 
-### API endpoints
+### API    endpoints
 
 @app.route("/")
 def hello_world():
