@@ -8,13 +8,13 @@ services:
 #    env_file:
 #      - ./.env.prod.db
     environment:
-      POSTGRES_USER_FILE=/run/secrets/psql_user
-      POSTGRES_PASSWORD_FILE=/run/secrets/psql_pass
-      POSTGRES_DB_FILE=/run/secrets/psql_dbname
-
+      - POSTGRES_USER_FILE=/run/secrets/psql_user
+      - POSTGRES_DB_FILE=/run/secrets/psql_dbname
+      - POSTGRES_PASSWORD_FILE=/run/secrets/psql_pass
     secrets:
       - psql_user
       - psql_pass
+      - psql_dbname
   web:
     build:
       context: ./services/web
@@ -29,6 +29,11 @@ services:
       - ./.env.prod
     depends_on:
       - db
+    # web needs those as well so we can parametize the DATABASE_CONNEXION URL
+    secrets:
+      - psql_user
+      - psql_pass
+      - psql_dbname
   nginx:
     build: ./services/nginx
     volumes:
@@ -38,7 +43,6 @@ services:
       - 80:80
     depends_on:
       - web
-
 volumes:
   postgres_data:
   static_content:
@@ -47,8 +51,11 @@ volumes:
 # external - assumes that you used docker secret create to create those named secrets
 secrets:
   psql_user:
-    external: psql_user
+    file: ./psql_user.txt
+#    external: true
   psql_pass:
-    external: psql_pass  
+    file: ./psql_pass.txt
+  #    external: true
   psql_dbname:
-    external: psql_dbname
+    file: ./psql_dbname.txt
+#    external: true
