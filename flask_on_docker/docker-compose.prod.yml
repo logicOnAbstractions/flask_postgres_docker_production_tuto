@@ -11,6 +11,7 @@ services:
     build:
       context: ./services/web
       dockerfile: Dockerfile.prod
+    image: python
     command: gunicorn --bind 0.0.0.0:5000 manage:app
     volumes:
       - static_content:/home/app/web/project/static
@@ -23,6 +24,7 @@ services:
       - db
   nginx:
     build: ./services/nginx
+    image: nginx
     volumes:
       - static_content:/home/app/web/project/static
       - media_content:/home/app/web/project/media
