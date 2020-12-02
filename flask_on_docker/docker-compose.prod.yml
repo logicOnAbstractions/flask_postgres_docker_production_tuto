@@ -1,29 +1,29 @@
 version: '3.8'
 
+x-content-volumes: &cont_vols
+    - static_content:/home/app/web/project/static
+    - media_content:/home/app/web/project/media
+x-db-secrets: &db_secrets
+    - psql_user
+    - psql_pass
+    - psql_dbname
 services:
   db:
     image: postgres:13.1
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-#    env_file:
-#      - ./.env.prod.db
     environment:
       - POSTGRES_USER_FILE=/run/secrets/psql_user
       - POSTGRES_DB_FILE=/run/secrets/psql_dbname
       - POSTGRES_PASSWORD_FILE=/run/secrets/psql_pass
-    secrets:
-      - psql_user
-      - psql_pass
-      - psql_dbname
+    secrets: *db_secrets
   web:
     build:
       context: ./services/web
       dockerfile: Dockerfile.prod
     image: python
     command: gunicorn --bind 0.0.0.0:5000 manage:app
-    volumes:
-      - static_content:/home/app/web/project/static
-      - media_content:/home/app/web/project/media
+    volumes: *cont_vols
     expose:
       - 5000
     env_file:
@@ -31,16 +31,11 @@ services:
     depends_on:
       - db
     # web needs those as well so we can parametize the DATABASE_CONNEXION URL
-    secrets:
-      - psql_user
-      - psql_pass
-      - psql_dbname
+    secrets: *db_secrets
   nginx:
     build: ./services/nginx
     image: nginx
-    volumes:
-      - static_content:/home/app/web/project/static
-      - media_content:/home/app/web/project/media
+    volumes: *cont_vols
     ports:
       - 80:80
     depends_on:
