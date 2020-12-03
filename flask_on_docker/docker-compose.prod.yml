@@ -17,6 +17,12 @@ services:
       - POSTGRES_DB_FILE=/run/secrets/psql_dbname
       - POSTGRES_PASSWORD_FILE=/run/secrets/psql_pass
     secrets: *db_secrets
+    healthcheck:
+      test: pg_isready -U myuser -d db_prod
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
   web:
     build:
       context: ./services/web
@@ -28,8 +34,9 @@ services:
       - 5000
     env_file:
       - ./.env.prod
-    depends_on:
-      - db
+#    depends_on:
+#      db:
+#        condition: service_healthy
     # web needs those as well so we can parametize the DATABASE_CONNEXION URL
     secrets: *db_secrets
   nginx:
